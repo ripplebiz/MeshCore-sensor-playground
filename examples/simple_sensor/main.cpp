@@ -10,7 +10,7 @@ public:
 
 protected:
   /* ========================== custom logic here ========================== */
-  Trigger low_batt, critical_batt;
+  Trigger presence_alert, critical_batt;
   TimeSeriesData  battery_data;
 
   void onSensorDataRead() override {
@@ -18,7 +18,7 @@ protected:
 
     battery_data.recordData(getRTCClock(), batt_voltage);   // record battery
     alertIf(batt_voltage < 3.4f, critical_batt, HIGH_PRI_ALERT, "Battery is critical!");
-    alertIf(batt_voltage < 3.6f, low_batt, LOW_PRI_ALERT, "Battery is low");
+    alertIf(sensors.isArmed() && sensors.isMotionDetected(), presence_alert, LOW_PRI_ALERT, "Motion detected!");
   }
 
   int querySeriesData(uint32_t start_secs_ago, uint32_t end_secs_ago, MinMaxAvg dest[], int max_num) override {
@@ -27,8 +27,19 @@ protected:
   }
 
   bool handleCustomCommand(uint32_t sender_timestamp, char* command, char* reply) override {
-    if (strcmp(command, "magic") == 0) {    // example 'custom' command handling
-      strcpy(reply, "**Magic now done**");
+    if (strcmp(command, "disarm") == 0) {    // example 'custom' command handling
+      sensors.setArmed(false);
+      strcpy(reply, "OK - now disarmed");
+      return true;   // handled
+    }
+    if (strcmp(command, "arm") == 0) {    // example 'custom' command handling
+      sensors.setArmed(true);
+      strcpy(reply, "OK - now armed");
+      return true;   // handled
+    }
+    if (strcmp(command, "config range") == 0) {
+      bool success = sensors.configureForMaxRange();
+      strcpy(reply, success ? "OK - configured for max range" : "ERR - unable to configure");
       return true;   // handled
     }
     return false;  // not handled
@@ -149,7 +160,6 @@ void loop() {
   }
 
   board.loop();   // let the board feed its watchdog, run periodic housekeeping
-
   the_mesh.loop();
   sensors.loop();
 #ifdef DISPLAY_CLASS
