@@ -29,6 +29,10 @@ public:
     }
   }
 
+  float getMCUTemperature() override {   // don't want MCU temp
+    return NAN;
+  }
+
   uint16_t getBattMilliVolts() override {
     analogReadResolution(10);
 

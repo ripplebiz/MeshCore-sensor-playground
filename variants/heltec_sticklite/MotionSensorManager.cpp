@@ -11,7 +11,7 @@ bool MotionSensorManager::begin() {
 }
 
 bool MotionSensorManager::querySensors(uint8_t requester_permissions, CayenneLPP& telemetry) {
-  telemetry.addDigitalInput(TELEM_CHANNEL_SELF, _armed ? 1 : 0);
+  telemetry.addSwitch(TELEM_CHANNEL_SELF, _armed ? 1 : 0);
   telemetry.addPresence(TELEM_CHANNEL_SELF, ld2410s.isMotionDetected() ? 1 : 0);
   telemetry.addDistance(TELEM_CHANNEL_SELF, ((float)ld2410s.getDistance()) / 100.0f );  // convert to meters
   return true;
